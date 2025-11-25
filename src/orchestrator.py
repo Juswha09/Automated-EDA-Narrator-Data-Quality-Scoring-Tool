@@ -1,5 +1,4 @@
-# src/orchestrator.py
-
+%%writefile src/orchestrator.py
 from loader import DataLoader
 from preprocessor import Preprocessor
 from eda_analyzer import EDAAnalyzer
