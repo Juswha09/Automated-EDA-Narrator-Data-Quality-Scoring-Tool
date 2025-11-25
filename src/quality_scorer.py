@@ -18,7 +18,7 @@ class QualityScorer:
         self.scores['missing'] = round(float(score), 2)
         return self.scores['missing']
 
-    def duplicate_score(self):
+    def duplicates_score(self):
         dups = self.eda.get('duplicates', 0)
         pct = (dups / max(1, self.df_len)) * 100
         score = max(0, 100 - pct * 2)  # penalise duplicates a bit more
