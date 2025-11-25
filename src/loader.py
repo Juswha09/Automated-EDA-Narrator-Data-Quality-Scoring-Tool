@@ -1,24 +1,27 @@
-# DataLoader
 # src/loader.py
 import pandas as pd
-from typing import Optional
 
 class DataLoader:
-    def __init__(self, path: str, sample_n: Optional[int] = 5):
-        self.path = path
-        self.sample_n = sample_n
-        self.df = None
+    def __init__(self, path):
+        self._path = path            # protected attribute
+        self._df = None
 
-    def load(self) -> pd.DataFrame:
-        self.df = pd.read_csv(self.path)
-        return self.df
+    def load(self, nrows=None):
+        self._df = pd.read_csv(self._path, nrows=nrows)
+        return self._df
 
-    def peek(self):
-        if self.df is None:
-            raise RuntimeError("Data not loaded yet.")
-        return self.df.head(self.sample_n)
+    def get_df(self):
+        return self._df
 
-    def detect_types(self):
-        if self.df is None:
-            raise RuntimeError("Data not loaded yet.")
-        return self.df.dtypes.to_dict()
+    # Dunder methods
+    def __repr__(self):
+        rows = len(self._df) if self._df is not None else 0
+        return f"<DataLoader path='{self._path}' rows={rows}>"
+
+    def __eq__(self, other):
+        if not isinstance(other, DataLoader):
+            return False
+        return self._df.shape == other._df.shape
+
+    def __len__(self):
+        return len(self._df.columns) if self._df is not None else 0
