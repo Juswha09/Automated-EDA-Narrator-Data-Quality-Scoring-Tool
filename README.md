@@ -25,6 +25,7 @@ The project demonstrates **object-oriented programming (OOP)** concepts includin
 - Categorical profiling (frequency distribution, unique ratio)
 - Outlier detection summary
 - Missing value analysis per feature
+- Duplicate row detection
 
 ### Data Quality Intelligence
 | Metric          | Basis                    | Weight |
@@ -36,6 +37,7 @@ The project demonstrates **object-oriented programming (OOP)** concepts includin
 - Missing values, duplicates, outliers, balance score
 -   Final weighted score (0–100)
 -   Quality verdict: Excellent / Good / Fair / Poor
+-   Supports custom weights for flexible scoring strategies
 
 ### Natural-Language Narration
 - Generates explanation of dataset shape, variability, missing values, outliers & verdict
@@ -129,19 +131,28 @@ from src.orchestrator import DatasetPipeline
 
 pipeline = DatasetPipeline("data/sample.csv")
 report = pipeline.run()
-
-print(report)  # prints markdown report to console
+print(report)  # Prints markdown report to console
 ```
+Run Pipeline with Custom Weights
+
+```python
+custom_weights = {
+    'missing': 0.50,   # prioritize missing values
+    'duplicates': 0.10,
+    'outliers': 0.20,
+    'balance': 0.20
+}
+
+pipeline_custom = DatasetPipeline("data/sample.csv", custom_weights=custom_weights)
+report_custom = pipeline_custom.run()
+print(report_custom)
+```
+
 Run via CLI
 
 ```bash
-python src/cli.py data/sample.csv
-```
-Output prints directly to terminal.
-Save Markdown to file:
-
-```bash
 python src/cli.py data/sample.csv --out reports/sample_report.md
+python src/cli.py data/sample.csv --weights '{"missing":0.5,"duplicates":0.1,"outliers":0.2,"balance":0.2}'
 ```
 
 Terminal confirmation:
@@ -149,6 +160,7 @@ Terminal confirmation:
 ```bash
 Wrote report to reports/sample_report.md
 ```
+
 Run in Google Colab / Jupyter
 
 ```bash
@@ -165,35 +177,47 @@ pipeline = DatasetPipeline("Automated-EDA-Narrator-Data-Quality-Scoring-Tool/dat
 report = pipeline.run()
 print(report)
 ```
+Compare Multiple Weight Configurations
+
+```python
+import pandas as pd
+
+weight_configs = {
+    'Default': {'missing':0.35, 'duplicates':0.15, 'outliers':0.25, 'balance':0.25},
+    'Missing Focus': {'missing':0.50, 'duplicates':0.10, 'outliers':0.20, 'balance':0.20},
+    'Outlier Focus': {'missing':0.20, 'duplicates':0.30, 'outliers':0.40, 'balance':0.10},
+    'Equal Weights': {'missing':0.25, 'duplicates':0.25, 'outliers':0.25, 'balance':0.25},
+    'Balance Focus': {'missing':0.20, 'duplicates':0.20, 'outliers':0.20, 'balance':0.40}
+}
+
+results = []
+for name, weights in weight_configs.items():
+    pipeline = DatasetPipeline("data/sample.csv", custom_weights=weights)
+    pipeline.run()
+    results.append({
+        'Configuration': name,
+        'Overall Score': round(pipeline.scores['overall'], 2),
+        'Missing Weight': weights['missing'],
+        'Duplicates Weight': weights['duplicates'],
+        'Outliers Weight': weights['outliers'],
+        'Balance Weight': weights['balance']
+    })
+
+comparison_df = pd.DataFrame(results)
+print(comparison_df.to_string(index=False))
+```
+Error Handling - Invalid Weights
+
+```python
+try:
+    invalid_weights = {'missing':0.5,'duplicates':0.3,'outliers':0.3,'balance':0.1}
+    pipeline = DatasetPipeline("data/sample.csv", custom_weights=invalid_weights)
+    pipeline.run()
+except ValueError as e:
+    print(f"✓ Error correctly caught: {e}")
+```
 Run entire test suite
 
 ```bash
 pytest
-```
-Sample Test Snippet
-
-```python
-from src.loader import DataLoader
-
-def test_loader_reads_csv():
-    loader = DataLoader("data/sample.csv")
-    df = loader.load()
-    assert len(df) > 0
-```
-```python
-from src.quality_scorer import QualityScorer
-
-def test_quality_scoring_runs():
-    dummy = {"missing": {"col": {"pct": 0}}, "duplicates": 0, "outliers": {"col": 0}}
-    scorer = QualityScorer(dummy, df_len=100)
-    score = scorer.overall_score()
-    assert 0 <= score <= 100
-```
-```python
-from src.orchestrator import DatasetPipeline
-
-def test_pipeline_execution():
-    pipe = DatasetPipeline("data/sample.csv")
-    report = pipe.run()
-    assert "Automated EDA Report" in report
 ```
