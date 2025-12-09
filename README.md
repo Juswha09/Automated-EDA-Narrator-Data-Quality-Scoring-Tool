@@ -11,11 +11,11 @@ The project demonstrates **object-oriented programming (OOP)** concepts includin
 ## 2. Team Members
 | Member | Role |
 |--------|------|
-| Member 1 | DataLoader + Preprocessor |
-| Member 2 | NumericAnalyzer + CategoricalAnalyzer (EDA) |
-| Member 3 | QualityScorer |
-| Member 4 | Narrator |
-| Member 5 | DatasetPipeline + ReportBuilder + Integration |
+| Mark Orano | DataLoader + Preprocessor |
+| Jomar Ligas | NumericAnalyzer + CategoricalAnalyzer (EDA) |
+| Lex Leander Lumantas | QualityScorer |
+| Philip Andree Tupas | Narrator |
+| Josh Ganhinhin | DatasetPipeline + ReportBuilder + Integration |
 
 ---
 
