@@ -12,8 +12,7 @@
 
 
 
-# DatasetSe![Uploading 2.png…]()
-nse: Automated EDA Narrator + Data Quality Scoring Tool
+# DatasetSense: Automated EDA Narrator + Data Quality Scoring Tool
 ## 1. Project Overview
 DatasetSense is a Python tool that performs **automated exploratory data analysis (EDA)** and computes a **dataset quality score (0–100)**. It generates **human-readable insights** and produces a **markdown report** summarizing dataset characteristics and quality.  
 
