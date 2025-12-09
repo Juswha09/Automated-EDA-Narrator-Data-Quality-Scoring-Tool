@@ -21,20 +21,85 @@ class QualityScorer:
     Attributes:
         _eda (dict): Protected dictionary of EDA results (missing, duplicates, outliers).
         _df_len (int): Number of rows in the dataset.
+        _weights (dict): Custom weights for each metric (must sum to 1.0).
         scores (dict): Stores individual metric scores and final overall score.
     """
 
-    def __init__(self, eda_results, df_len):
+    # Default weights as class attribute
+    DEFAULT_WEIGHTS = {
+        'missing': 0.35,
+        'duplicates': 0.15,
+        'outliers': 0.25,
+        'balance': 0.25
+    }
+
+    def __init__(self, eda_results, df_len, custom_weights=None):
         """
         Initialize the QualityScorer with EDA results and dataset length.
 
         Args:
             eda_results (dict): Output dictionary from the EDAAnalyzer modules.
             df_len (int): Total number of rows in the dataset.
+            custom_weights (dict, optional): Custom weights for scoring metrics.
+                Must contain keys: 'missing', 'duplicates', 'outliers', 'balance'.
+                Values must sum to 1.0. Defaults to None (uses DEFAULT_WEIGHTS).
+
+        Raises:
+            ValueError: If custom_weights don't sum to 1.0 or contain invalid keys.
         """
         self._eda = eda_results
         self._df_len = df_len
         self.scores = {}
+        
+        # Set weights - use custom if provided, otherwise use defaults
+        if custom_weights is not None:
+            self._validate_weights(custom_weights)
+            self._weights = custom_weights
+        else:
+            self._weights = self.DEFAULT_WEIGHTS.copy()
+
+    def _validate_weights(self, weights):
+        """
+        Validate that custom weights are properly formatted.
+
+        Args:
+            weights (dict): Custom weights to validate.
+
+        Raises:
+            ValueError: If weights are invalid.
+        """
+        required_keys = {'missing', 'duplicates', 'outliers', 'balance'}
+        
+        # Check if all required keys are present
+        if set(weights.keys()) != required_keys:
+            raise ValueError(
+                f"Custom weights must contain exactly these keys: {required_keys}. "
+                f"Got: {set(weights.keys())}"
+            )
+        
+        # Check if all values are numeric and positive
+        for key, value in weights.items():
+            if not isinstance(value, (int, float)) or value < 0:
+                raise ValueError(
+                    f"Weight for '{key}' must be a positive number. Got: {value}"
+                )
+        
+        # Check if weights sum to 1.0 (with small tolerance for floating point errors)
+        total = sum(weights.values())
+        if not (0.99 <= total <= 1.01):
+            raise ValueError(
+                f"Weights must sum to 1.0. Current sum: {total:.4f}. "
+                f"Weights: {weights}"
+            )
+
+    def get_weights(self):
+        """
+        Get the current weights being used for scoring.
+
+        Returns:
+            dict: Current weights for each metric.
+        """
+        return self._weights.copy()
 
     def missing_score(self):
         """
@@ -85,7 +150,9 @@ class QualityScorer:
 
     def overall_score(self):
         """
-        Compute a weighted overall data quality score using:
+        Compute a weighted overall data quality score using configured weights.
+
+        Default weights:
             - Missing score (35%)
             - Duplicate score (15%)
             - Outlier score (25%)
@@ -101,12 +168,9 @@ class QualityScorer:
             if metric not in self.scores:
                 getattr(self, f"{metric}_score")()
 
-        weights = {
-            'missing': 0.35,
-            'duplicates': 0.15,
-            'outliers': 0.25,
-            'balance': 0.25
-        }
-
-        self.scores['overall'] = sum(self.scores[m] * w for m, w in weights.items())
+        # Compute weighted overall score
+        self.scores['overall'] = sum(
+            self.scores[m] * self._weights[m] 
+            for m in self._weights.keys()
+        )
         return self.scores['overall']
